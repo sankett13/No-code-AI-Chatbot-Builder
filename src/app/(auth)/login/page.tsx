@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -36,52 +37,93 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6">
-      <div className="w-full max-w-md bg-white p-8 rounded shadow">
-        <h1 className="text-2xl font-semibold mb-4">Sign in</h1>
+    <motion.div
+      className="min-h-screen flex items-center justify-center p-6 bg-white"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.8 }}
+    >
+      <motion.div
+        className="w-full max-w-md bg-white p-8 rounded shadow-lg text-[#141414]"
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6 }}
+      >
+        <h1 className="text-3xl font-bold mb-6 text-center">Sign in</h1>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <label className="block">
+          <motion.label
+            className="block"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+          >
             <span className="text-sm">Email</span>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="mt-1 block w-full border rounded px-3 py-2"
+              className="mt-1 block w-full border rounded px-3 py-2 text-black"
             />
-          </label>
+          </motion.label>
 
-          <label className="block">
+          <motion.label
+            className="block"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4, delay: 0.3 }}
+          >
             <span className="text-sm">Password</span>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="mt-1 block w-full border rounded px-3 py-2"
+              className="mt-1 block w-full border rounded px-3 py-2 text-black"
             />
-          </label>
+          </motion.label>
 
-          <button
+          <motion.button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 rounded"
+            className="w-full bg-gray-800 text-white py-2 rounded hover:bg-gray-700 transition"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4, delay: 0.4 }}
           >
             {loading ? "Signing in..." : "Sign in"}
-          </button>
+          </motion.button>
         </form>
 
-        {errorMsg && <p className="mt-4 text-sm text-red-600">{errorMsg}</p>}
-        <p className="mt-4 text-sm">
-          <a href="/forgot-password" className="text-blue-600 mr-4">
+        {errorMsg && (
+          <motion.p
+            className="mt-4 text-sm text-red-400"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4, delay: 0.5 }}
+          >
+            {errorMsg}
+          </motion.p>
+        )}
+
+        <motion.p
+          className="mt-4 text-sm text-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4, delay: 0.6 }}
+        >
+          <a
+            href="/forgot-password"
+            className="text-gray-400 mr-4 hover:text-black"
+          >
             Forgot your password?
           </a>
           Don't have an account yet?{" "}
-          <a href="/register" className="text-blue-600">
+          <a href="/register" className="text-gray-400 hover:text-black">
             Create one
           </a>
-        </p>
-      </div>
-    </div>
+        </motion.p>
+      </motion.div>
+    </motion.div>
   );
 }

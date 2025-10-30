@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useAuth } from "@/hooks/useAuth";
-import { useRouter } from "next/navigation";
+
 
 export default function CreateBotPage() {
   const { user, loading: authLoading } = useAuth();

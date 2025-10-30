@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 
 export default function RegisterPage() {
   const [firstName, setFirstName] = useState("");
@@ -117,46 +118,78 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6">
-      <div className="w-full max-w-md bg-white p-8 rounded shadow">
-        <h1 className="text-2xl font-semibold mb-4">Create an account</h1>
+    <motion.div
+      className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-b from-white to-gray-50"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.8 }}
+    >
+      <motion.div
+        className="w-full max-w-md bg-white p-8 rounded shadow-lg text-[#141414]"
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6 }}
+      >
+        <h1 className="text-3xl font-bold mb-6 text-center">
+          Create an account
+        </h1>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
-            <label className="block">
+            <motion.label
+              className="block"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.4, delay: 0.2 }}
+            >
               <span className="text-sm">First name</span>
               <input
                 type="text"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 required
-                className="mt-1 block w-full border rounded px-3 py-2"
+                className="mt-1 block w-full border rounded px-3 py-2 text-black"
               />
-            </label>
+            </motion.label>
 
-            <label className="block">
+            <motion.label
+              className="block"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.4, delay: 0.3 }}
+            >
               <span className="text-sm">Last name</span>
               <input
                 type="text"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 required
-                className="mt-1 block w-full border rounded px-3 py-2"
+                className="mt-1 block w-full border rounded px-3 py-2 text-black"
               />
-            </label>
+            </motion.label>
           </div>
 
-          <label className="block">
+          <motion.label
+            className="block"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4, delay: 0.4 }}
+          >
             <span className="text-sm">Email</span>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="mt-1 block w-full border rounded px-3 py-2"
+              className="mt-1 block w-full border rounded px-3 py-2 text-black"
             />
-          </label>
+          </motion.label>
 
-          <label className="block">
+          <motion.label
+            className="block"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4, delay: 0.5 }}
+          >
             <span className="text-sm">Password</span>
             <input
               type="password"
@@ -164,11 +197,16 @@ export default function RegisterPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
-              className="mt-1 block w-full border rounded px-3 py-2"
+              className="mt-1 block w-full border rounded px-3 py-2 text-black"
             />
-          </label>
+          </motion.label>
 
-          <label className="block">
+          <motion.label
+            className="block"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4, delay: 0.6 }}
+          >
             <span className="text-sm">Confirm password</span>
             <input
               type="password"
@@ -176,28 +214,45 @@ export default function RegisterPage() {
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
               minLength={6}
-              className="mt-1 block w-full border rounded px-3 py-2"
+              className="mt-1 block w-full border rounded px-3 py-2 text-black"
             />
-          </label>
+          </motion.label>
 
-          <button
+          <motion.button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 rounded"
+            className="w-full bg-gray-800 text-white py-2 rounded hover:bg-gray-700 transition"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4, delay: 0.7 }}
           >
             {loading ? "Creating account..." : "Create account"}
-          </button>
+          </motion.button>
         </form>
 
-        {message && <p className="mt-4 text-sm text-gray-700">{message}</p>}
+        {message && (
+          <motion.p
+            className="mt-4 text-sm text-gray-400"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4, delay: 0.8 }}
+          >
+            {message}
+          </motion.p>
+        )}
 
-        <p className="mt-4 text-sm">
+        <motion.p
+          className="mt-4 text-sm text-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4, delay: 0.9 }}
+        >
           Already have an account?{" "}
-          <a href="/login" className="text-blue-600">
+          <a href="/login" className="text-gray-400 hover:text-[#141414]">
             Log in
           </a>
-        </p>
-      </div>
-    </div>
+        </motion.p>
+      </motion.div>
+    </motion.div>
   );
 }
