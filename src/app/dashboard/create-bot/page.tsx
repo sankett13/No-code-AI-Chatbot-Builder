@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useAuth } from "@/hooks/useAuth";
 
-
 export default function CreateBotPage() {
   const { user, loading: authLoading } = useAuth();
   const [name, setName] = useState("");

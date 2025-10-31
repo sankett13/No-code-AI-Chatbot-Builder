@@ -24,6 +24,18 @@ export async function POST(req: Request) {
       );
     }
 
+    // For public chatbot access, create a service client that bypasses RLS
+    const serviceClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!, // Service role key bypasses RLS
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      }
+    );
+
     // If the client passed the user's access token, create a request-scoped Supabase client
     const authHeader = req.headers.get("authorization");
     const token = authHeader?.startsWith("Bearer ")
@@ -57,9 +69,8 @@ export async function POST(req: Request) {
     );
 
     // 2) Fetch document chunks for this bot and compute similarity client-side.
-    // Some DB setups give an ambiguous-column error for the RPC function; to avoid
-    // that, fetch embeddings and rank locally (ok for small-medium datasets).
-    const { data: rows, error: fetchErr } = await db
+    // Use service client for public access to document chunks
+    const { data: rows, error: fetchErr } = await serviceClient
       .from("document_chunks")
       .select("content,metadata,embedding")
       .eq("bot_id", botId)
@@ -161,6 +172,17 @@ export async function POST(req: Request) {
 
     console.log("[api/chat] retrieved chunks:", chunks.length);
 
+    // Get bot details for better context using service client (bypasses RLS)
+    const { data: botData, error: botError } = await serviceClient
+      .from("bots")
+      .select("name, instructions")
+      .eq("id", botId)
+      .single();
+
+    if (botError) {
+      console.error("[api/chat] failed to fetch bot details:", botError);
+    }
+
     const contextText = chunks
       .map((c) => {
         // sanitize metadata before including it in the prompt so internal fields
@@ -178,49 +200,42 @@ export async function POST(req: Request) {
     // 3) Call the Google Generative LLM via LangChain to generate a reply using the retrieved context
     const llm = new ChatGoogleGenerativeAI({
       model: "gemini-2.5-flash",
-      temperature: 0.2,
+      temperature: 0.7,
     });
 
-    const systemPrompt = `You are a concise, strictly factual assistant. Use plain, unformatted text only — no Markdown, headings, bullets, bold, italics, HTML, code blocks, or any other markup. Do not prepend labels such as "Answer:" or "Suggestion:".
+    // Handle cases where no knowledge base exists
+    let systemPrompt = "";
+    let prompt = "";
 
-Respond directly and succinctly. Put each distinct fact, step, or instruction on its own line. Separate paragraphs or different parts with a single blank line. Keep the reply as short as possible while fully answering.
+    if (chunks.length === 0) {
+      // No knowledge base - use bot instructions and general AI capabilities
+      const botName = botData?.name || "AI Assistant";
+      const botInstructions =
+        botData?.instructions || "I'm an AI assistant here to help you.";
 
-Only use information explicitly supported by the provided CONTEXT. Do not repeat or reveal context contents, internal metadata, source names, or chunk indices. Do not cite sources, speculate, or add unsupported details.
+      systemPrompt = `You are ${botName}, an AI assistant. ${botInstructions}
 
-If the context does not provide enough information to answer, reply exactly:
-I don't know.
+Respond naturally and helpfully to user questions. Use plain, conversational text without any markup or formatting. Be friendly, concise, and informative.
 
-If the user's request is ambiguous but can be resolved with a short clarification, ask one concise clarifying question on its own line (do not attempt to answer until clarified).
+Since you don't have access to specific knowledge documents, provide general helpful responses based on your training. If the user asks about specific company information, services, or documents that you don't have access to, politely explain that you would need more specific information or documents to provide detailed answers about those topics.`;
 
-When giving ordered steps, use simple numbered lines (1. ..., 2. ...), one step per line.`;
+      prompt = `${systemPrompt}\n\nUser: ${message}\n\nAssistant:`;
+    } else {
+      // Has knowledge base - use context-based response
+      systemPrompt = `You are a helpful AI assistant. Use plain, conversational text without any markup or formatting. Be friendly and informative.
 
-    const prompt = `SYSTEM: ${systemPrompt}\n\nCONTEXT:\n${
-      contextText || "(no relevant context found)"
-    }\n\nUSER QUESTION:\n${message}\n\nProvide a concise answer and cite any context lines used.`;
+Use the provided context to answer questions accurately. If the context doesn't contain enough information to fully answer a question, say so and provide what information you can from the context.
+
+Don't reveal internal metadata or cite sources unless specifically asked. Keep responses natural and conversational.`;
+
+      prompt = `${systemPrompt}\n\nContext from knowledge base:\n${contextText}\n\nUser question: ${message}\n\nAssistant:`;
+    }
+
     console.log("[api/chat] constructed prompt:", prompt);
     let llmReply = "";
     try {
       const response = await llm.invoke(prompt);
       const llmReply = response.content;
-
-      //   // Try several possible method shapes that different langchain wrappers expose.
-      //   if (typeof (llm as any).generate === "function") {
-      //     // @ts-ignore
-      //     const gen = await (llm as any).generate([prompt]);
-      //     llmReply =
-      //       gen?.generations?.[0]?.[0]?.text ??
-      //       gen?.generations?.[0]?.[0]?.message?.content ??
-      //       gen?.output?.[0]?.content?.[0]?.text ??
-      //       JSON.stringify(gen);
-      //   } else if (typeof (llm as any).call === "function") {
-      //     // @ts-ignore
-      //     llmReply = (await (llm as any).call(prompt)) ?? "";
-      //   } else if (typeof (llm as any).invoke === "function") {
-      //     // @ts-ignore
-      //     llmReply = (await (llm as any).invoke(prompt)) ?? "";
-      //   } else {
-      //     throw new Error("no supported LLM call method available");
-      //   }
 
       console.log("[api/chat] LLM response:", llmReply);
       return new Response(JSON.stringify({ ok: true, reply: llmReply }), {
