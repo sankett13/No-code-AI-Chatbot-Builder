@@ -5,8 +5,6 @@ import { ReactNode, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
@@ -25,14 +23,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
-      {/* Navbar */}
-      <div className="z-10">
-        <Navbar />
-      </div>
 
-      <div className="flex flex-1 mt-[64px]">
-        {" "}
-        {/* Adjusted margin to prevent overlap */}
+      {/* Dashboard content sits below the global Navbar (root layout provides top padding) */}
+
+      <div className="flex flex-1">
         {/* Sidebar */}
         <div className="w-64 flex-shrink-0 bg-black text-white">
           <Sidebar userEmail={user?.email || "unknown@example.com"} />
@@ -53,9 +47,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           </AnimatePresence>
         </main>
       </div>
-
-      {/* Footer */}
-      <Footer />
+      {/* Footer is rendered globally in the root layout */}
     </div>
   );
 }

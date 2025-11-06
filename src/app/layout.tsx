@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,7 +29,15 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        {/* Global Navbar (fixed) and Footer rendered here so individual pages don't duplicate them */}
+        <Navbar />
+
+        {/* Main content gets top padding to avoid being hidden under the fixed Navbar.
+      Removed the global `min-h-screen` so pages determine their own height
+      and the Footer will sit directly after page content (reduces bottom gap). */}
+        <main className="pt-16 flex flex-col">{children}</main>
+
+        <Footer />
       </body>
     </html>
   );

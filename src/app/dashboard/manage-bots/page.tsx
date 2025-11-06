@@ -4,6 +4,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import BotAnalytics from "@/components/dashboard/BotAnalytics";
 
 type Bot = {
   id: string;
@@ -26,9 +27,11 @@ export default function ManageBotsPage() {
   const [bots, setBots] = useState<Bot[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeBot, setActiveBot] = useState<Bot | null>(null);
+  const [analyticsBot, setAnalyticsBot] = useState<Bot | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [copyToast, setCopyToast] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchBots = async () => {
@@ -152,6 +155,18 @@ export default function ManageBotsPage() {
   return (
     <div className="min-h-[calc(100vh-120px)] bg-gradient-to-br from-gray-50 to-gray-100 p-8">
       <div className="max-w-7xl mx-auto">
+        {/* Copy confirmation toast (top-right) */}
+        {copyToast && (
+          <div className="fixed top-5 right-5 z-50">
+            <div
+              role="status"
+              aria-live="polite"
+              className="bg-[#141414] text-white px-4 py-2 rounded shadow-md"
+            >
+              {copyToast}
+            </div>
+          </div>
+        )}
         <div className="text-center mb-12">
           <h1 className="text-5xl font-bold text-gray-900 mb-4">
             Your AI Assistant Collection
@@ -233,6 +248,14 @@ export default function ManageBotsPage() {
                         Test Bot
                       </button>
 
+                      <button
+                        onClick={() => setAnalyticsBot(bot)}
+                        className="px-6 py-3 bg-green-100 text-green-700 rounded-lg font-semibold hover:bg-green-200 transition-all duration-200 shadow-md"
+                        title="View Analytics"
+                      >
+                        📊
+                      </button>
+
                       <button className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg font-semibold hover:bg-gray-200 transition-all duration-200 shadow-md">
                         Edit
                       </button>
@@ -258,22 +281,49 @@ export default function ManageBotsPage() {
                         <p className="text-sm text-gray-700 font-medium mb-2">
                           Copy & paste this code into your website:
                         </p>
-                        <textarea
-                          readOnly
-                          className="w-full text-xs p-2 border rounded-md bg-white font-mono"
-                          rows={2}
-                          value={`<script src="${process.env.NEXT_PUBLIC_APP_URL}/api/embed/${bot.id}"></script>`}
-                        />
-                        <button
-                          onClick={() =>
-                            navigator.clipboard.writeText(
-                              `<script src="${process.env.NEXT_PUBLIC_APP_URL}/api/embed/${bot.id}"></script>`
-                            )
-                          }
-                          className="mt-2 text-sm text-blue-600 hover:underline"
-                        >
-                          Copy to clipboard
-                        </button>
+                        {(() => {
+                          const embedSnippet = `<script src="${process.env.NEXT_PUBLIC_APP_URL}/api/embed/${bot.id}"></script>`;
+                          return (
+                            <>
+                              <textarea
+                                readOnly
+                                className="w-full text-xs p-2 border rounded-md bg-white font-mono"
+                                rows={2}
+                                value={embedSnippet}
+                                aria-label={`Embed snippet for ${bot.name}`}
+                              />
+                              <div className="flex items-center justify-between mt-2">
+                                <button
+                                  onClick={async () => {
+                                    try {
+                                      await navigator.clipboard.writeText(
+                                        embedSnippet
+                                      );
+                                      setCopyToast("Copied to clipboard");
+                                      // clear after 3s
+                                      setTimeout(
+                                        () => setCopyToast(null),
+                                        3000
+                                      );
+                                    } catch (e) {
+                                      console.error("Clipboard copy failed", e);
+                                      setCopyToast("Failed to copy");
+                                      setTimeout(
+                                        () => setCopyToast(null),
+                                        3000
+                                      );
+                                    }
+                                  }}
+                                  className="mt-0 text-sm text-blue-600 hover:underline"
+                                >
+                                  Copy to clipboard
+                                </button>
+
+                                
+                              </div>
+                            </>
+                          );
+                        })()}
                       </div>
                     )}
                   </div>
@@ -402,6 +452,51 @@ export default function ManageBotsPage() {
                     Send
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Analytics Modal */}
+        {analyticsBot && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-7xl max-h-[90vh] overflow-y-auto">
+              {/* Header */}
+              <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center mr-3">
+                    <span className="text-white text-xl">📊</span>
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">
+                      {analyticsBot.name} - Analytics
+                    </h2>
+                    <p className="text-sm text-gray-500">Performance insights and metrics</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setAnalyticsBot(null)}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
+                >
+                  <svg
+                    className="w-6 h-6 text-gray-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Analytics Content */}
+              <div className="p-6">
+                <BotAnalytics botId={analyticsBot.id} />
               </div>
             </div>
           </div>

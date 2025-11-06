@@ -22,14 +22,21 @@ export async function GET(
       const iframe = document.createElement("iframe");
       iframe.src = "${baseUrl}/chatbot/${botId}";
       iframe.style.position = "fixed";
-      iframe.style.bottom = "20px";
-      iframe.style.right = "20px";
-      iframe.style.width = "400px";
-      iframe.style.height = "600px";
+      iframe.style.bottom = "0px";
+      iframe.style.right = "0px";
+      iframe.style.width = "100vw";
+      iframe.style.height = "100vh";
       iframe.style.border = "none";
       iframe.style.zIndex = "9999";
-      iframe.style.borderRadius = "12px";
-      iframe.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
+      iframe.style.background = "transparent";
+      iframe.style.pointerEvents = "none";
+      iframe.setAttribute("allowtransparency", "true");
+      
+      // Allow pointer events only on the chat widget area
+      iframe.addEventListener('load', function() {
+        iframe.style.pointerEvents = "auto";
+      });
+      
       document.body.appendChild(iframe);
     })();
   `;

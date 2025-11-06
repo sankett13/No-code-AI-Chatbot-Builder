@@ -15,6 +15,10 @@ export default function CreateBotPage() {
   const [fileError, setFileError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [aiPreview, setAiPreview] = useState<string | null>(null);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [showAIPanel, setShowAIPanel] = useState(false);
 
   function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const selectedFile = e.target.files?.[0];
@@ -107,6 +111,48 @@ export default function CreateBotPage() {
     }
   }
 
+  async function generateInstructions({
+    tone = "friendly",
+    length = "concise",
+  } = {}) {
+    setIsGenerating(true);
+    setAiError(null);
+    try {
+      // get session like you already do
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        throw new Error("Session expired. Please log in again.");
+      }
+
+      const res = await fetch("/api/bots/generate-instructions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          name,
+          existingInstructions: instructions,
+          tone,
+          length,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok)
+        throw new Error(data.error || "Failed to generate instructions");
+      setAiPreview(data.instructions);
+      setShowAIPanel(true);
+    } catch (e) {
+      setAiError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setIsGenerating(false);
+    }
+  }
+
   // Show loading while checking authentication
   if (authLoading) {
     return (
@@ -147,13 +193,13 @@ export default function CreateBotPage() {
 
   return (
     <div className="max-w-6xl mx-auto p-6 lg:p-10">
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 lg:p-8">
+      <div className="bg-white rounded-2xl shadow-lg p-6 lg:p-8 text-[#141414] border border-[rgba(20,20,20,0.06)]">
         <div className="flex items-start justify-between gap-6 mb-6">
           <div>
-            <h1 className="text-2xl lg:text-3xl font-extrabold">
+            <h1 className="text-2xl lg:text-3xl font-extrabold text-[#141414]">
               Create a New Bot
             </h1>
-            <p className="text-sm text-slate-600 mt-1">
+            <p className="text-sm text-[#4b5563] mt-1">
               Configure your bot's personality, upload knowledge documents, and
               preview the interface before creating it.
             </p>
@@ -171,7 +217,7 @@ export default function CreateBotPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   type="text"
-                  className="mt-2 block w-full bg-white border border-slate-200 rounded-lg px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                  className="mt-2 block w-full bg-white border rounded-lg px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-[rgba(20,20,20,0.12)] border-[rgba(20,20,20,0.06)] text-[#141414]"
                   placeholder="e.g. Support Genie"
                   required
                 />
@@ -184,11 +230,25 @@ export default function CreateBotPage() {
                 <textarea
                   value={instructions}
                   onChange={(e) => setInstructions(e.target.value)}
-                  className="mt-2 block w-full bg-white border border-slate-200 rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                  className="mt-2 block w-full bg-white border rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-[rgba(20,20,20,0.12)] border-[rgba(20,20,20,0.06)] text-[#141414]"
                   placeholder="Give the bot a short description of its role and tone."
                   rows={5}
                 />
               </label>
+
+              <div className="flex items-center gap-2 mt-2">
+                <button
+                  type="button"
+                  onClick={() => generateInstructions()}
+                  disabled={isGenerating}
+                  className="inline-flex items-center gap-2 px-3 py-1 rounded border bg-white text-[#141414] hover:bg-[#f3f3f3]"
+                >
+                  {isGenerating ? "Generating..." : "Write with AI"}
+                </button>
+                <span className="text-xs text-slate-400">
+                  Use AI to write a system instruction
+                </span>
+              </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
                 <label className="flex items-center gap-3">
@@ -223,7 +283,8 @@ export default function CreateBotPage() {
                     />
                     <label
                       htmlFor="file-upload"
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer text-sm hover:bg-slate-100"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-white border rounded-lg cursor-pointer text-sm hover:bg-[#f7f7f7] border-[rgba(20,20,20,0.06)]"
+                      style={{ color: "#141414" }}
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -262,7 +323,7 @@ export default function CreateBotPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-semibold px-5 py-2 rounded-lg shadow"
+                  className="inline-flex items-center gap-2 bg-[#141414] hover:bg-[#1f1f1f] disabled:bg-[#777777] text-white font-semibold px-5 py-2 rounded-lg shadow"
                 >
                   {loading ? (
                     <>
@@ -306,7 +367,7 @@ export default function CreateBotPage() {
             </div>
           </form>
 
-          <aside className="rounded-lg border border-slate-100 p-4 bg-gradient-to-b from-white to-slate-50">
+          <aside className="rounded-lg border p-4 bg-white border-[rgba(20,20,20,0.06)]">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h3 className="text-sm font-semibold">Live preview</h3>
@@ -344,6 +405,46 @@ export default function CreateBotPage() {
             </div>
           </aside>
         </div>
+
+        {/* AI Instructions Panel */}
+        {showAIPanel && (
+          <div className="mt-3 p-3 border rounded bg-white shadow">
+            <div className="mb-2 text-sm text-slate-600">AI suggestion</div>
+            <div className="mb-3 whitespace-pre-wrap text-sm text-[#141414]">
+              {aiPreview}
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setInstructions(aiPreview || "");
+                  setShowAIPanel(false);
+                }}
+                className="px-3 py-1 bg-[#141414] text-white rounded"
+              >
+                Accept
+              </button>
+              <button
+                type="button"
+                onClick={() => generateInstructions()} // regenerate
+                className="px-3 py-1 border rounded"
+              >
+                Regenerate
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowAIPanel(false)}
+                className="px-3 py-1 text-slate-600"
+              >
+                Cancel
+              </button>
+            </div>
+            {aiError && (
+              <div className="mt-2 text-xs text-red-600">{aiError}</div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
