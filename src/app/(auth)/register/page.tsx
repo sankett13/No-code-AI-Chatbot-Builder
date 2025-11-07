@@ -59,6 +59,10 @@ export default function RegisterPage() {
       const { data, error } = await supabase.auth.signUp({
         email: normalizedEmail,
         password,
+        options: {
+          // ensure the confirmation link returns to our client callback
+          emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
+        },
       });
 
       if (error) {
