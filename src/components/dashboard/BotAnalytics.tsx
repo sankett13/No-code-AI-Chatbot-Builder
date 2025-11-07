@@ -1,6 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { IconType } from "react-icons";
+import {
+  FiUsers,
+  FiMessageSquare,
+  FiCheckCircle,
+  FiXCircle,
+  FiBarChart2,
+  FiClock,
+} from "react-icons/fi";
 
 interface DailyStat {
   day: string;
@@ -105,16 +114,18 @@ export default function BotAnalytics({ botId }: BotAnalyticsProps) {
     <div className="space-y-6">
       {/* Header with Range Selector */}
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900">Bot Analytics</h2>
+        <h2 className="text-2xl font-bold" style={{ color: "#141414" }}>
+          Bot Analytics
+        </h2>
         <div className="flex gap-2">
           {["7d", "30d", "90d"].map((r) => (
             <button
               key={r}
               onClick={() => setRange(r)}
-              className={`px-4 py-2 rounded-lg font-medium transition ${
+              className={`px-4 py-2 rounded-md font-medium transition border ${
                 range === r
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? "bg-[#141414] text-white"
+                  : "bg-white text-[#141414] border-gray-200 hover:bg-gray-50"
               }`}
             >
               {r === "7d" ? "7 Days" : r === "30d" ? "30 Days" : "90 Days"}
@@ -128,49 +139,49 @@ export default function BotAnalytics({ botId }: BotAnalyticsProps) {
         <SummaryCard
           title="Total Sessions"
           value={data.summary.total_sessions.toLocaleString()}
-          icon="📊"
+          iconName="sessions"
           color="blue"
         />
         <SummaryCard
           title="Total Messages"
           value={data.summary.total_messages.toLocaleString()}
-          icon="💬"
+          iconName="messages"
           color="green"
         />
         <SummaryCard
           title="Success Rate"
           value={`${data.summary.success_rate}%`}
-          icon="✅"
+          iconName="success"
           color="emerald"
         />
         <SummaryCard
           title="Fallback Rate"
           value={`${data.summary.fallback_rate}%`}
-          icon="❌"
+          iconName="fallback"
           color="red"
         />
         <SummaryCard
           title="Avg Messages/Session"
           value={data.summary.avg_messages_per_session.toFixed(1)}
-          icon="📈"
+          iconName="avgMessages"
           color="purple"
         />
         <SummaryCard
           title="Avg Response Time"
           value={`${Math.round(data.summary.avg_response_time_ms)}ms`}
-          icon="⚡"
+          iconName="responseTime"
           color="yellow"
         />
         <SummaryCard
           title="Successful Answers"
           value={data.summary.total_succeeded.toLocaleString()}
-          icon="👍"
+          iconName="success"
           color="teal"
         />
         <SummaryCard
           title="Unanswered Queries"
           value={data.summary.total_fallbacks.toLocaleString()}
-          icon="❓"
+          iconName="fallback"
           color="orange"
         />
       </div>
@@ -179,7 +190,12 @@ export default function BotAnalytics({ botId }: BotAnalyticsProps) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Daily Requests Chart */}
         <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold mb-4">Daily Requests</h3>
+          <h3
+            className="text-lg font-semibold mb-4"
+            style={{ color: "#141414" }}
+          >
+            Daily Requests
+          </h3>
           <DailyRequestsChart data={data.daily_stats} />
         </div>
 
@@ -210,33 +226,44 @@ export default function BotAnalytics({ botId }: BotAnalyticsProps) {
 function SummaryCard({
   title,
   value,
-  icon,
+  iconName,
   color,
 }: {
   title: string;
   value: string;
-  icon: string;
+  iconName?: string;
   color: string;
 }) {
-  const colorClasses: Record<string, string> = {
-    blue: "bg-blue-50 border-blue-200",
-    green: "bg-green-50 border-green-200",
-    emerald: "bg-emerald-50 border-emerald-200",
-    red: "bg-red-50 border-red-200",
-    purple: "bg-purple-50 border-purple-200",
-    yellow: "bg-yellow-50 border-yellow-200",
-    teal: "bg-teal-50 border-teal-200",
-    orange: "bg-orange-50 border-orange-200",
+  // Card base style (white background, subtle border). Use #141414 for primary text
+  const cardClasses: Record<string, string> = {
+    default: "bg-white border border-gray-200",
   };
 
+  const iconsMap: Record<string, IconType> = {
+    sessions: FiUsers,
+    messages: FiMessageSquare,
+    success: FiCheckCircle,
+    fallback: FiXCircle,
+    avgMessages: FiBarChart2,
+    responseTime: FiClock,
+  };
+
+  const Icon = iconsMap[iconName || ""] || FiBarChart2;
+
   return (
-    <div className={`${colorClasses[color]} border rounded-lg p-4`}>
+    <div className={`${cardClasses.default} rounded-md p-4`}>
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm text-gray-600 mb-1">{title}</p>
-          <p className="text-2xl font-bold text-gray-900">{value}</p>
+          <p className="text-xs mb-1" style={{ color: "#6b6b6b" }}>
+            {title}
+          </p>
+          <p className="text-xl font-semibold" style={{ color: "#141414" }}>
+            {value}
+          </p>
         </div>
-        <span className="text-2xl">{icon}</span>
+        <div className="p-1 rounded bg-white border border-gray-100">
+          <Icon className="h-6 w-6" style={{ color: "#141414" }} aria-hidden />
+        </div>
       </div>
     </div>
   );
@@ -250,34 +277,125 @@ function DailyRequestsChart({ data }: { data: DailyStat[] }) {
   const maxMessages = Math.max(...data.map((d) => d.messages));
   const chartHeight = 200;
 
+  // Build scaled points within a 0..100 x-range and chartHeight y-range
+  const points = data.map((stat, i) => {
+    const x = data.length === 1 ? 50 : (i / (data.length - 1)) * 100;
+    const ratio = maxMessages > 0 ? stat.messages / maxMessages : 0;
+    const y = chartHeight - ratio * (chartHeight - 40) - 20;
+    return { x, y, date: stat.day, value: stat.messages };
+  });
+
+  // Catmull-Rom to Bezier conversion for a smooth line
+  const catmullRom2bezier = (pts: { x: number; y: number }[]) => {
+    if (pts.length < 2) return "";
+    const d: string[] = [];
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[i - 1] || pts[i];
+      const p1 = pts[i];
+      const p2 = pts[i + 1];
+      const p3 = pts[i + 2] || p2;
+
+      const cp1x = p1.x + (p2.x - p0.x) / 6;
+      const cp1y = p1.y + (p2.y - p0.y) / 6;
+      const cp2x = p2.x - (p3.x - p1.x) / 6;
+      const cp2y = p2.y - (p3.y - p1.y) / 6;
+
+      if (i === 0) d.push(`M ${p1.x.toFixed(2)} ${p1.y.toFixed(2)}`);
+      d.push(
+        `C ${cp1x.toFixed(2)} ${cp1y.toFixed(2)}, ${cp2x.toFixed(
+          2
+        )} ${cp2y.toFixed(2)}, ${p2.x.toFixed(2)} ${p2.y.toFixed(2)}`
+      );
+    }
+    return d.join(" ");
+  };
+
+  const pathD = catmullRom2bezier(points);
+
   return (
     <div className="relative">
-      <svg width="100%" height={chartHeight} className="overflow-visible">
-        {data.map((stat, index) => {
-          const barHeight = (stat.messages / maxMessages) * (chartHeight - 40);
-          const x = (index / data.length) * 100;
-          const width = 100 / data.length - 1;
+      <svg
+        viewBox={`0 0 100 ${chartHeight}`}
+        width="100%"
+        height={chartHeight}
+        className="overflow-visible"
+      >
+        <defs>
+          <linearGradient id="areaGradient" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor="#141414" stopOpacity="0.08" />
+            <stop offset="100%" stopColor="#141414" stopOpacity="0.01" />
+          </linearGradient>
+        </defs>
 
-          return (
-            <g key={stat.day}>
-              <rect
-                x={`${x}%`}
-                y={chartHeight - barHeight - 20}
-                width={`${width}%`}
-                height={barHeight}
-                className="fill-blue-500 hover:fill-blue-600 transition"
-              />
-              <text
-                x={`${x + width / 2}%`}
-                y={chartHeight - 5}
-                className="text-xs fill-gray-600"
-                textAnchor="middle"
-              >
-                {new Date(stat.day).getDate()}
-              </text>
-            </g>
-          );
-        })}
+        {/* grid lines and y-axis labels */}
+        <g stroke="#e6e6e6" strokeWidth={0.5}>
+          {[0, 0.25, 0.5, 0.75, 1].map((t, i) => {
+            const y = 20 + (1 - t) * (chartHeight - 40);
+            return (
+              <g key={i}>
+                <line x1={0} x2={100} y1={y} y2={y} />
+                <text
+                  x={1}
+                  y={y - 2}
+                  className="text-xs fill-gray-500"
+                  style={{ fontSize: 10 }}
+                >
+                  {Math.round(maxMessages * t)}
+                </text>
+              </g>
+            );
+          })}
+        </g>
+
+        {/* filled area */}
+        {points.length > 1 && (
+          <path
+            d={`${pathD} L ${points[points.length - 1].x.toFixed(2)} ${
+              chartHeight - 20
+            } L ${points[0].x.toFixed(2)} ${chartHeight - 20} Z`}
+            fill="url(#areaGradient)"
+            stroke="none"
+          />
+        )}
+
+        {/* smooth line */}
+        <path
+          d={pathD}
+          fill="none"
+          stroke="#141414"
+          strokeWidth={1.8}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+
+        {/* points with native tooltip */}
+        {points.map((p, i) => (
+          <g key={i}>
+            <circle
+              cx={p.x}
+              cy={p.y}
+              r={1.8}
+              fill="#fff"
+              stroke="#141414"
+              strokeWidth={1.2}
+            >
+              <title>{`${p.date}: ${p.value}`}</title>
+            </circle>
+          </g>
+        ))}
+
+        {/* x labels */}
+        {points.map((p, i) => (
+          <text
+            key={`t-${i}`}
+            x={p.x}
+            y={chartHeight - 2}
+            className="text-xs fill-gray-500"
+            textAnchor="middle"
+          >
+            {new Date(p.date).getDate()}
+          </text>
+        ))}
       </svg>
       <div className="text-xs text-gray-500 mt-2 text-center">
         {data.length > 0 && `${data[0].day} to ${data[data.length - 1].day}`}
