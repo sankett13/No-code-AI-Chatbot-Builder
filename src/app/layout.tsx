@@ -29,15 +29,64 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {/* Global Navbar (fixed) and Footer rendered here so individual pages don't duplicate them */}
-        <Navbar />
+        {/*
+              To avoid a brief flash of the site's Navbar/Footer when this app is
+              embedded (e.g. inside an iframe), render the global chrome hidden by
+              default and run a tiny inline script early on the client that reveals
+              it only when the page is top-level (not embedded).
+
+              This prevents the navbar/footer from painting briefly on the host
+              site before the chatbot's own layout takes over.
+            */}
+
+        {/*
+          Use a root-class strategy to avoid timing problems: the CSS below
+          keeps the chrome hidden by default, and this small inline script
+          adds `show-chrome` to the <html> element when the page is top-level.
+          Toggling a class on the root is reliable even if the chrome elements
+          haven't been parsed yet (no getElementById timing race).
+        */}
+
+        {/*
+          Default to showing site chrome (prevents visible re-renders during
+          client-side navigation). If the page is embedded inside an iframe,
+          the inline script below will add `hide-chrome` to the <html> element
+          which hides the navbar/footer. This trades a tiny flash for normal
+          in-site navigation stability. For a no-flash embed, use an explicit
+          server-side embed route or query param (I can add that next).
+        */}
+
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
+              /* chrome visible by default for normal site navigation */
+              .global-chrome, .global-chrome-footer { display: block; }
+              /* hide chrome when the "hide-chrome" class is present on the html element (embedding) */
+              html.hide-chrome .global-chrome, html.hide-chrome .global-chrome-footer { display: none !important; }
+            `,
+          }}
+        />
+
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{if(typeof window!=='undefined'&&window.self!==window.top){document.documentElement.classList.add('hide-chrome');}}catch(e){};`,
+          }}
+        />
+
+        {/* global-chrome is hidden by default to prevent flicker when embedded */}
+        <div id="global-chrome" className="global-chrome">
+          <Navbar />
+        </div>
 
         {/* Main content gets top padding to avoid being hidden under the fixed Navbar.
-      Removed the global `min-h-screen` so pages determine their own height
-      and the Footer will sit directly after page content (reduces bottom gap). */}
+          Removed the global `min-h-screen` so pages determine their own height
+          and the Footer will sit directly after page content (reduces bottom gap). */}
         <main className="pt-16 flex flex-col">{children}</main>
 
-        <Footer />
+        {/* Footer also inside global-chrome so it won't flash when embedded */}
+        <div id="global-chrome-footer" className="global-chrome-footer">
+          <Footer />
+        </div>
       </body>
     </html>
   );

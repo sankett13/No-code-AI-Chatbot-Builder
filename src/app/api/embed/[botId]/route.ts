@@ -24,18 +24,18 @@ export async function GET(
       iframe.style.position = "fixed";
       iframe.style.bottom = "0px";
       iframe.style.right = "0px";
-      iframe.style.width = "100vw";
-      iframe.style.height = "100vh";
+      iframe.style.width = "420px";
+      iframe.style.height = "720px";
       iframe.style.border = "none";
       iframe.style.zIndex = "9999";
       iframe.style.background = "transparent";
-      iframe.style.pointerEvents = "none";
+      iframe.style.pointerEvents = "auto";
       iframe.setAttribute("allowtransparency", "true");
+      iframe.setAttribute("title", "AI Chatbot Widget");
       
-      // Allow pointer events only on the chat widget area
-      iframe.addEventListener('load', function() {
-        iframe.style.pointerEvents = "auto";
-      });
+      // Ensure iframe doesn't block host page interactions
+      iframe.style.maxWidth = "calc(100vw - 24px)";
+      iframe.style.maxHeight = "calc(100vh - 24px)";
       
       document.body.appendChild(iframe);
     })();

@@ -1,16 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 
-export default function Navbar() {
+function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    // Check initial auth state
     const checkAuth = async () => {
       const {
         data: { session },
@@ -180,3 +179,5 @@ export default function Navbar() {
     </header>
   );
 }
+
+export default /*#__PURE__*/ memo(Navbar);
