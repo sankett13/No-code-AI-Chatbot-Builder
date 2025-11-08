@@ -1,0 +1,19 @@
+name: Daily Analytics Aggregation
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: "0 2 * * *"
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  aggregate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Analytics Aggregation
+        run: |
+          curl -X POST "${{ secrets.APP_URL }}/api/analytics/aggregate" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            -d '{"days": 1}' \
+            --fail

@@ -18,7 +18,12 @@ export async function POST(req: Request) {
     const authHeader = req.headers.get("authorization");
     const cronSecret = process.env.CRON_SECRET || "change-me-in-production";
 
-    if (authHeader !== `Bearer ${cronSecret}`) {
+    // Check for Vercel cron header or manual auth
+    const isVercelCron =
+      req.headers.get("authorization") === `Bearer ${process.env.CRON_SECRET}`;
+    const hasManualAuth = authHeader === `Bearer ${cronSecret}`;
+
+    if (!isVercelCron && !hasManualAuth) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

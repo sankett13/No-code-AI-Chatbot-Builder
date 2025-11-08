@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "aggregate": "bash run-aggregation.sh",
+    "aggregate:daily": "bash run-aggregation.sh 1",
+    "aggregate:weekly": "bash run-aggregation.sh 7"
   },
   "dependencies": {
     "framer-motion": "^12.23.24",
