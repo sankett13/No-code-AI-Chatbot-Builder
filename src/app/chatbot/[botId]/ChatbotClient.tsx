@@ -25,12 +25,73 @@ const customStyles = `
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
   }
+
+  /* Genie open / close animations */
+  @keyframes genie-in {
+    0% {
+      transform: scaleY(0.18) translateY(36%);
+      transform-origin: 100% 100%;
+      opacity: 0;
+      border-radius: 50%;
+    }
+    60% {
+      transform: scaleY(1.04) translateY(-6%);
+      opacity: 1;
+      border-radius: 18px;
+    }
+    100% {
+      transform: scaleY(1) translateY(0);
+      opacity: 1;
+      border-radius: 12px;
+    }
+  }
+
+  @keyframes genie-out {
+    0% {
+      transform: scaleY(1) translateY(0);
+      opacity: 1;
+      border-radius: 12px;
+    }
+    100% {
+      transform: scaleY(0.18) translateY(36%);
+      transform-origin: 100% 100%;
+      opacity: 0;
+      border-radius: 50%;
+    }
+  }
+
+  .genie-open {
+    transform-origin: 100% 100%;
+    animation: genie-in 420ms cubic-bezier(0.2, 0.9, 0.2, 1) forwards;
+  }
+
+  .genie-close {
+    transform-origin: 100% 100%;
+    animation: genie-out 320ms cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
+  }
   
   /* Ensure transparent background for embedded chatbot */
   html, body {
     background: transparent !important;
     margin: 0 !important;
     padding: 0 !important;
+  }
+
+  /* Hide visible scrollbars but keep touch/scroll behavior */
+  #messages-container {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+    overscroll-behavior: contain;
+  }
+  #messages-container::-webkit-scrollbar {
+    display: none; /* Safari and Chrome */
+    width: 0;
+    height: 0;
+  }
+
+  /* Prevent body overscroll when embedded */
+  html, body {
+    overscroll-behavior: none;
   }
   
   /* Responsive adjustments for mobile */
@@ -223,7 +284,12 @@ export default function ChatbotClient({
   useEffect(() => {
     const el = containerRef.current;
     if (el) {
-      el.scrollTop = el.scrollHeight;
+      // Smooth scroll to bottom for new messages, but fall back to immediate when not supported
+      try {
+        el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+      } catch (e) {
+        el.scrollTop = el.scrollHeight;
+      }
     }
   }, [messages, isTyping]);
 
@@ -246,8 +312,8 @@ export default function ChatbotClient({
         aria-hidden={!isOpen}
       >
         <div
-          className={`bg-white rounded-3xl shadow-xl overflow-hidden ${
-            isOpen ? "chatbot-widget-open" : ""
+          className={`bg-white rounded-3xl overflow-hidden ${
+            isOpen ? "chatbot-widget-open genie-open" : "genie-close"
           }`}
           style={{
             width: "100%",
@@ -258,6 +324,11 @@ export default function ChatbotClient({
             minHeight: "480px",
             border: `1px solid ${mediumColor}`,
             backdropFilter: "blur(10px)",
+            boxShadow: "none",
+            // larger smooth corners for a softer look
+            borderRadius: "28px",
+            // subpixel-antialiasing via will-change to improve rendering of rounded edges
+            willChange: "transform, opacity",
           }}
         >
           {/* Header - More elegant design */}
@@ -270,8 +341,11 @@ export default function ChatbotClient({
           >
             <div className="flex items-center gap-4">
               <div
-                className="w-11 h-11 rounded-full bg-white/25 backdrop-blur-sm flex items-center justify-center font-semibold text-lg shadow-lg"
-                style={{ border: "2px solid rgba(255,255,255,0.3)" }}
+                className="w-11 h-11 rounded-full bg-white/25 backdrop-blur-sm flex items-center justify-center font-semibold text-lg"
+                style={{
+                  border: "2px solid rgba(255,255,255,0.3)",
+                  boxShadow: "none",
+                }}
               >
                 {botMeta?.name ? botMeta.name[0].toUpperCase() : "✨"}
               </div>
@@ -308,6 +382,7 @@ export default function ChatbotClient({
 
           {/* Messages - Enhanced design */}
           <div
+            id="messages-container"
             ref={containerRef}
             className="flex-1 overflow-y-auto px-6 py-4 space-y-4"
             style={{
@@ -339,20 +414,26 @@ export default function ChatbotClient({
                 } animate-fade-in`}
               >
                 <div
-                  className={`max-w-[85%] px-4 py-3 rounded-2xl font-medium text-sm leading-relaxed ${
-                    m.role === "user"
-                      ? "text-white shadow-lg"
-                      : "bg-white text-gray-800 shadow-md border border-gray-100"
+                  className={`max-w-[85%] px-4 py-3 font-medium text-sm leading-relaxed ${
+                    m.role === "user" ? "text-white" : "bg-white text-gray-800"
                   }`}
                   style={
                     m.role === "user"
-                      ? {
+                      ? ({
                           background: `linear-gradient(135deg, ${color} 0%, ${color}cc 100%)`,
-                          borderTopRightRadius: "6px",
-                        }
-                      : {
-                          borderTopLeftRadius: "6px",
-                        }
+                          borderTopRightRadius: "10px",
+                          borderBottomLeftRadius: "18px",
+                          borderBottomRightRadius: "18px",
+                          borderTopLeftRadius: "18px",
+                          boxShadow: "none",
+                        } as React.CSSProperties)
+                      : ({
+                          borderTopLeftRadius: "10px",
+                          borderBottomLeftRadius: "18px",
+                          borderBottomRightRadius: "18px",
+                          borderTopRightRadius: "18px",
+                          boxShadow: "none",
+                        } as React.CSSProperties)
                   }
                 >
                   {m.content}
@@ -363,8 +444,14 @@ export default function ChatbotClient({
             {isTyping && (
               <div className="flex justify-start animate-fade-in">
                 <div
-                  className="bg-white px-4 py-3 rounded-2xl shadow-md border border-gray-100"
-                  style={{ borderTopLeftRadius: "6px" }}
+                  className="bg-white px-4 py-3 border border-gray-100"
+                  style={{
+                    borderTopLeftRadius: "10px",
+                    borderBottomLeftRadius: "18px",
+                    borderBottomRightRadius: "18px",
+                    borderTopRightRadius: "18px",
+                    boxShadow: "none",
+                  }}
                 >
                   <div className="flex space-x-1.5">
                     <div
@@ -405,10 +492,12 @@ export default function ChatbotClient({
                     }
                   }}
                   placeholder="Ask me anything..."
-                  className="w-full px-4 py-3 text-sm bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 placeholder-gray-400"
+                  className="w-full px-4 py-3 text-sm bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 placeholder-gray-400"
                   style={
                     {
                       "--tw-ring-color": lightColor,
+                      borderRadius: "22px",
+                      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.6)",
                     } as React.CSSProperties
                   }
                   disabled={isTyping}
@@ -451,11 +540,12 @@ export default function ChatbotClient({
         <button
           onClick={() => setIsOpen(true)}
           aria-label="Open chat"
-          className="absolute bottom-0 right-0 z-50 w-16 h-16 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-3xl group"
+          className="absolute bottom-0 right-0 z-50 w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 group"
           style={{
             background: `linear-gradient(135deg, ${color} 0%, ${color}dd 100%)`,
             color: "white",
             border: "3px solid rgba(255,255,255,0.2)",
+            boxShadow: "none",
           }}
         >
           <div className="flex flex-col items-center justify-center">
@@ -465,11 +555,7 @@ export default function ChatbotClient({
             <div className="w-2 h-2 bg-white rounded-full opacity-75 group-hover:animate-pulse"></div>
           </div>
 
-          {/* Subtle pulsing ring animation */}
-          <div
-            className="absolute inset-0 rounded-full animate-ping opacity-20"
-            style={{ background: color }}
-          ></div>
+          {/* pulsing ring removed to avoid blinking when minimized */}
         </button>
       )}
     </div>

@@ -38,8 +38,11 @@ export async function GET(
       iframe.style.pointerEvents = "auto";
       
       // Ensure iframe doesn't exceed viewport on mobile
-      iframe.style.maxWidth = "calc(100vw - 48px)";
-      iframe.style.maxHeight = "calc(100vh - 48px)";
+      iframe.style.maxWidth = "100vw";
+      iframe.style.maxHeight = "100vh";
+      iframe.style.overflow = "hidden";
+  iframe.setAttribute('scrolling', 'no');
+  iframe.style.overscrollBehavior = 'contain';
       
       // Listen for resize messages from the chatbot iframe
       window.addEventListener("message", function(event) {
@@ -49,9 +52,9 @@ export async function GET(
           const { isOpen } = event.data;
           
           if (isOpen) {
-            // Expanded size for open chatbot
-            iframe.style.width = "420px";
-            iframe.style.height = "720px";
+            // Expanded size for open chatbot - Updated to match widget size
+            iframe.style.width = "380px";
+            iframe.style.height = "600px";
             
             // Adjust position for mobile responsiveness
             const isMobile = window.innerWidth <= 768;
@@ -67,8 +70,8 @@ export async function GET(
               iframe.style.bottom = "24px";
               iframe.style.right = "24px";
               iframe.style.left = "auto";
-              iframe.style.width = "420px";
-              iframe.style.height = "720px";
+              iframe.style.width = "380px";
+              iframe.style.height = "600px";
               iframe.style.maxWidth = "calc(100vw - 48px)";
               iframe.style.maxHeight = "calc(100vh - 48px)";
             }
@@ -94,6 +97,11 @@ export async function GET(
           height: window.innerHeight
         }, "${baseUrl}");
       });
+      
+      // Add padding, margin, and box-sizing adjustments to the iframe
+      iframe.style.padding = "0";
+      iframe.style.margin = "0";
+      iframe.style.boxSizing = "border-box";
       
       document.body.appendChild(iframe);
     })();

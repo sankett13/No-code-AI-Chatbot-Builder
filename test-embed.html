@@ -88,20 +88,28 @@
     </nav>
 
     <div class="content">
-        <h2>Test Page Content</h2>
-        <p>This page is used to test the chatbot embed functionality and mobile responsiveness. The chatbot should:</p>
+        <h2>Test Page Content - Widget Implementation</h2>
+        <p>This page now uses the <strong>JavaScript Widget</strong> approach instead of iframe. The benefits include:
+        </p>
         <ul>
-            <li>Start as a small floating button in the bottom-right corner</li>
-            <li>Not block any content when minimized</li>
-            <li>Expand properly when opened</li>
-            <li>Work well on mobile devices</li>
-            <li>Not interfere with page navigation or content</li>
+            <li>✅ No iframe rendering issues</li>
+            <li>✅ Better mobile responsiveness</li>
+            <li>✅ Smoother animations and interactions</li>
+            <li>✅ Direct DOM injection for better performance</li>
+            <li>✅ More reliable cross-browser compatibility</li>
+            <li>✅ Easier styling and customization</li>
         </ul>
 
-        <p>Try clicking on the navigation links above and interact with other page elements to ensure the chatbot
-            doesn't block them when closed.</p>
+        <p>The widget should appear as a floating button in the bottom-right corner. Try clicking it to open the chat!
+        </p>
 
-        <h3>More Content</h3>
+        <h3>Technical Details</h3>
+        <p><strong>Widget API:</strong> <code>/api/widget/[botId]</code> - Returns a self-contained JavaScript widget
+        </p>
+        <p><strong>Iframe API:</strong> <code>/api/embed/[botId]</code> - Returns iframe-based embed (alternative
+            approach)</p>
+
+        <h3>More Content to Test Interaction</h3>
         <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore
             magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
             commodo consequat.</p>
@@ -115,8 +123,11 @@
         <p>&copy; 2024 My Company. All rights reserved.</p>
     </div>
 
-    <!-- Chatbot Embed Script - Using a test ID (will use default styling) -->
-    <script src="http://localhost:3000/api/embed/00000000-0000-0000-0000-000000000001"></script>
+    <!-- NEW: JavaScript Widget Embed (No iframe) -->
+    <script src="http://localhost:3000/api/widget/00000000-0000-0000-0000-000000000001"></script>
+
+    <!-- OLD: Iframe Embed (commented out) -->
+    <!-- <script src="http://localhost:3000/api/embed/00000000-0000-0000-0000-000000000001"></script> -->
 </body>
 
 </html>
