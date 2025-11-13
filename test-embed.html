@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Chatbot Embed - Mobile Responsiveness</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .nav a {
+            color: #333;
+            text-decoration: none;
+            padding: 10px 20px;
+            background: #f0f0f0;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+
+        .nav a:hover {
+            background: #e0e0e0;
+        }
+
+        .content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .footer {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        @media (max-width: 768px) {
+            .nav {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            body {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>Welcome to My Company Site</h1>
+        <p>This is nova soft bot</p>
+        <p>This is a yash clinic bot</p>
+    </div>
+
+    <nav class="nav">
+        <a href="#home">Home</a>
+        <a href="#about">About</a>
+        <a href="#services">Services</a>
+        <a href="#contact">Contact</a>
+        <a href="#blog">Blog</a>
+    </nav>
+
+    <div class="content">
+        <h2>Test Page Content</h2>
+        <p>This page is used to test the chatbot embed functionality and mobile responsiveness. The chatbot should:</p>
+        <ul>
+            <li>Start as a small floating button in the bottom-right corner</li>
+            <li>Not block any content when minimized</li>
+            <li>Expand properly when opened</li>
+            <li>Work well on mobile devices</li>
+            <li>Not interfere with page navigation or content</li>
+        </ul>
+
+        <p>Try clicking on the navigation links above and interact with other page elements to ensure the chatbot
+            doesn't block them when closed.</p>
+
+        <h3>More Content</h3>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore
+            magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
+            commodo consequat.</p>
+
+        <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+            Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est
+            laborum.</p>
+    </div>
+
+    <div class="footer">
+        <p>&copy; 2024 My Company. All rights reserved.</p>
+    </div>
+
+    <!-- Chatbot Embed Script - Using a test ID (will use default styling) -->
+    <script src="http://localhost:3000/api/embed/00000000-0000-0000-0000-000000000001"></script>
+</body>
+
+</html>

@@ -32,6 +32,20 @@ const customStyles = `
     margin: 0 !important;
     padding: 0 !important;
   }
+  
+  /* Responsive adjustments for mobile */
+  @media (max-width: 768px) {
+    .chatbot-widget-open {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      border-radius: 0 !important;
+    }
+  }
 `;
 
 // Inject styles
@@ -57,6 +71,32 @@ export default function ChatbotClient({
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
+
+  // Notify parent window about chatbot state changes for iframe resizing
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.parent !== window) {
+      window.parent.postMessage(
+        {
+          type: "CHATBOT_RESIZE",
+          isOpen: isOpen,
+        },
+        "*"
+      );
+    }
+  }, [isOpen]);
+
+  // Listen for window resize messages from parent
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data.type === "WINDOW_RESIZE") {
+        // Handle any responsive adjustments if needed
+        // The iframe sizing is handled by the parent window
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, []);
 
   // Hide global Navbar and Footer when this chatbot client is mounted.
   // We store previous inline display values and restore them on unmount so
@@ -189,7 +229,7 @@ export default function ChatbotClient({
 
   return (
     <div
-      className="h-full w-full flex items-end justify-end box-border"
+      className="h-full w-full flex items-end justify-end box-border p-0"
       style={{ background: "transparent" }}
     >
       {/* Floating widget container */}
@@ -199,14 +239,23 @@ export default function ChatbotClient({
             ? "translate-y-0 opacity-100 scale-100"
             : "translate-y-8 opacity-0 scale-95 pointer-events-none"
         }`}
-        style={{ width: isOpen ? 380 : "auto" }}
+        style={{
+          width: isOpen ? "100%" : "auto",
+          height: isOpen ? "100%" : "auto",
+        }}
         aria-hidden={!isOpen}
       >
         <div
-          className="bg-white rounded-3xl shadow-xl overflow-hidden"
+          className={`bg-white rounded-3xl shadow-xl overflow-hidden ${
+            isOpen ? "chatbot-widget-open" : ""
+          }`}
           style={{
-            width: 380,
-            height: 640,
+            width: "100%",
+            height: "100%",
+            maxWidth: "420px",
+            maxHeight: "720px",
+            minWidth: "320px",
+            minHeight: "480px",
             border: `1px solid ${mediumColor}`,
             backdropFilter: "blur(10px)",
           }}
@@ -262,7 +311,7 @@ export default function ChatbotClient({
             ref={containerRef}
             className="flex-1 overflow-y-auto px-6 py-4 space-y-4"
             style={{
-              height: 480,
+              height: "calc(100% - 140px)", // Account for header and input area
               background: `linear-gradient(to bottom, ${mediumColor} 0%, rgba(249,250,251,0.5) 100%)`,
             }}
           >
@@ -402,7 +451,7 @@ export default function ChatbotClient({
         <button
           onClick={() => setIsOpen(true)}
           aria-label="Open chat"
-          className="fixed bottom-6 right-6 z-50 w-16 h-16 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-3xl group"
+          className="absolute bottom-0 right-0 z-50 w-16 h-16 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-3xl group"
           style={{
             background: `linear-gradient(135deg, ${color} 0%, ${color}dd 100%)`,
             color: "white",

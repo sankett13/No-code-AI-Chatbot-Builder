@@ -100,7 +100,7 @@ export default function ContactPage() {
                     rel="noopener noreferrer"
                     className="hover:underline"
                   >
-                    Shubha Patel
+                    Shubham Patel
                   </a>
                 </div>
               </div>

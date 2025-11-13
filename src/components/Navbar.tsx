@@ -56,6 +56,13 @@ function Navbar() {
             Blogs
           </a>
 
+          <a
+            href="/pricing"
+            className="relative text-gray-600 hover:text-gray-800 after:content-[''] after:absolute after:left-0 after:-bottom-0.5 after:h-[2px] after:bg-[#141414] after:w-0 hover:after:w-full after:transition-all after:duration-300 focus:outline-none focus-visible:after:w-full"
+          >
+            Pricing
+          </a>
+
           {isLoggedIn && (
             <a
               href="/dashboard"
