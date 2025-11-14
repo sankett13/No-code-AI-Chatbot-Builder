@@ -109,12 +109,7 @@ const customStyles = `
   }
 `;
 
-// Inject styles
-if (typeof document !== "undefined") {
-  const styleSheet = document.createElement("style");
-  styleSheet.textContent = customStyles;
-  document.head.appendChild(styleSheet);
-}
+// Styles will be injected in useEffect to avoid hydration mismatch
 
 type BotMeta = { name?: string; instructions?: string; color?: string } | null;
 
@@ -132,19 +127,73 @@ export default function ChatbotClient({
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const [stylesInjected, setStylesInjected] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Mark component as mounted to prevent hydration issues
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Inject styles on mount to avoid hydration mismatch
+  useEffect(() => {
+    if (stylesInjected) return;
+    const styleSheet = document.createElement("style");
+    styleSheet.textContent = customStyles;
+    document.head.appendChild(styleSheet);
+    setStylesInjected(true);
+  }, [stylesInjected]);
 
   // Notify parent window about chatbot state changes for iframe resizing
   useEffect(() => {
-    if (typeof window !== "undefined" && window.parent !== window) {
-      window.parent.postMessage(
-        {
-          type: "CHATBOT_RESIZE",
-          isOpen: isOpen,
-        },
-        "*"
-      );
+    if (typeof window === "undefined" || window.parent === window) return;
+
+    const payload: any = { type: "CHATBOT_RESIZE", isOpen };
+    if (isOpen) {
+      // When open, advertise preferred iframe size and corner radius
+      payload.width = Math.min(420, window.innerWidth - 40) + "px";
+      payload.height = Math.min(720, window.innerHeight - 80) + "px";
+      payload.cornerRadius = "12px";
+    } else {
+      // Collapsed / minimized footprint
+      payload.width = "80px";
+      payload.height = "80px";
+      payload.cornerRadius = "50%";
+    }
+
+    console.log("ChatbotClient posting CHATBOT_RESIZE to parent:", payload);
+
+    try {
+      // Post to wildcard origin '*' to reach the parent page (which might be on a different origin)
+      window.parent.postMessage(payload, "*");
+      console.log("Posted to origin: * (wildcard)");
+    } catch (e) {
+      console.error("postMessage failed:", e);
     }
   }, [isOpen]);
+
+  // Listen for embed open/close messages from the parent (used when rendered inside an iframe)
+  useEffect(() => {
+    const handleParentMessage = (event: MessageEvent) => {
+      try {
+        const d = event.data || {};
+        console.log("ChatbotClient received message from parent:", d);
+        if (d && d.type === "EMBED_OPEN") {
+          console.log("Opening chatbot via EMBED_OPEN");
+          setIsOpen(true);
+        } else if (d && d.type === "EMBED_CLOSE") {
+          console.log("Closing chatbot via EMBED_CLOSE");
+          setIsOpen(false);
+        }
+      } catch (err) {
+        // ignore malformed messages
+        console.error("Error handling parent message:", err);
+      }
+    };
+
+    window.addEventListener("message", handleParentMessage);
+    return () => window.removeEventListener("message", handleParentMessage);
+  }, []);
 
   // Listen for window resize messages from parent
   useEffect(() => {
@@ -325,9 +374,7 @@ export default function ChatbotClient({
             border: `1px solid ${mediumColor}`,
             backdropFilter: "blur(10px)",
             boxShadow: "none",
-            // larger smooth corners for a softer look
-            borderRadius: "28px",
-            // subpixel-antialiasing via will-change to improve rendering of rounded edges
+            borderRadius: "30px", // Increased from 28px to 24px for smoother corners
             willChange: "transform, opacity",
           }}
         >
@@ -493,13 +540,10 @@ export default function ChatbotClient({
                   }}
                   placeholder="Ask me anything..."
                   className="w-full px-4 py-3 text-sm bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 placeholder-gray-400"
-                  style={
-                    {
-                      "--tw-ring-color": lightColor,
-                      borderRadius: "22px",
-                      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.6)",
-                    } as React.CSSProperties
-                  }
+                  style={{
+                    borderRadius: "20px", // Increased from 22px to 20px for smoother corners
+                    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.6)",
+                  }}
                   disabled={isTyping}
                 />
               </div>
@@ -546,6 +590,7 @@ export default function ChatbotClient({
             color: "white",
             border: "3px solid rgba(255,255,255,0.2)",
             boxShadow: "none",
+            overflow: "hidden", // Prevent cutting the circle
           }}
         >
           <div className="flex flex-col items-center justify-center">
